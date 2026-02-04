@@ -1,0 +1,123 @@
+-- // CẤU HÌNH //
+local Item1Name = "Dragonstorm"
+local Item2Name = "Dragonheart"
+local RequiredMastery = 500
+local SpecialItem = "Primordial Reign"
+local CheckTimes = 2
+local CheckInterval = 5 -- thời gian giữa các lần check (giây)
+
+-- // SERVICES //
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local CommF = ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("CommF_")
+local LocalPlayer = Players.LocalPlayer
+
+-- // KIỂM TRA USERNAME //
+if LocalPlayer.Name == "baohan_200" then
+    warn("🚫 Script không hoạt động với tài khoản baohan_200")
+    return
+end
+
+-- // CHỜ TỌA ĐỘ //
+local function WaitForPosition()
+    local char = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+    local root = char:WaitForChild("HumanoidRootPart")
+    
+    repeat
+        wait(1)
+    until root.Position.Magnitude > 0
+    print(">>> Nhân vật đã load xong tại: " .. tostring(root.Position))
+    return root.Position
+end
+
+-- // LẤY MASTER TỪ ITEM //
+local function GetItemMastery(itemName, inventory, backpack)
+    for _, item in pairs(inventory or {}) do
+        if item.Name == itemName then
+            return item.Mastery or 0
+        end
+    end
+    for _, tool in pairs(backpack:GetChildren()) do
+        if tool:IsA("Tool") and tool.Name:match("^%s*(.-)%s*$") == itemName then
+            return 0 
+        end
+    end
+    return nil 
+end
+
+-- // CHECK SPECIAL ITEM //
+local function HasSpecialItem(itemName, inventory, backpack, character)
+    -- Check inventory
+    for _, item in pairs(inventory or {}) do
+        if item.Name == itemName then return true end
+    end
+    -- Check Backpack
+    for _, tool in pairs(backpack:GetChildren()) do
+        if tool:IsA("Tool") and tool.Name:match("^%s*(.-)%s*$") == itemName then return true end
+    end
+    -- Check Character
+    if character then
+        for _, tool in pairs(character:GetChildren()) do
+            if tool:IsA("Tool") and tool.Name:match("^%s*(.-)%s*$") == itemName then return true end
+        end
+    end
+    return false
+end
+
+-- // LOGIC CHÍNH //
+task.spawn(function()
+    print(">>> Script Auto Check Mastery bắt đầu chạy...")
+
+    -- Chờ nhân vật load xong tọa độ
+    WaitForPosition()
+
+    local lastItem1Mas, lastItem2Mas, lastHasSpecialItem = 0, 0, false
+
+    -- Lặp check 2 lần
+    for i = 1, CheckTimes do
+        print(">>> Lần kiểm tra #" .. i)
+        local success, inventory = pcall(function() 
+            return CommF:InvokeServer("getInventory") 
+        end)
+        
+        local backpack = LocalPlayer:WaitForChild("Backpack")
+        local character = LocalPlayer.Character
+
+        if success and inventory then
+            local item1Mas = GetItemMastery(Item1Name, inventory, backpack)
+            local item2Mas = GetItemMastery(Item2Name, inventory, backpack)
+            local hasSpecialItem = HasSpecialItem(SpecialItem, inventory, backpack, character)
+
+            print("--- Status Check ---")
+            print(Item1Name .. " Mastery:", item1Mas)
+            print(Item2Name .. " Mastery:", item2Mas)
+            print(SpecialItem .. " sở hữu:", hasSpecialItem)
+
+            -- Lưu lại kết quả lần check cuối cùng
+            lastItem1Mas = item1Mas
+            lastItem2Mas = item2Mas
+            lastHasSpecialItem = hasSpecialItem
+        else
+            warn("Lỗi lấy Inventory, thử lại sau...")
+        end
+
+        wait(CheckInterval)
+    end
+
+    -- Sau 2 lần check mới quyết định gửi file
+    if (not lastItem1Mas) or (not lastItem2Mas) or 
+       (lastItem1Mas < RequiredMastery) or (lastItem2Mas < RequiredMastery) or
+       (not lastHasSpecialItem) then
+        
+        local fileName = LocalPlayer.Name .. ".txt"
+        local content = "Completed-XXXX"
+        pcall(function()
+            writefile(fileName, content)
+            print(">>> [SUCCESS] Đã lưu file:", fileName)
+        end)
+    else
+        print(">>> Tất cả item đủ yêu cầu, không cần lưu file.")
+    end
+
+    print(">>> Script hoàn tất 2 lần check.")
+end)

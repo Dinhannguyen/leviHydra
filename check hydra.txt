@@ -1,0 +1,86 @@
+local Workspace = game:GetService("Workspace")
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+
+-- Nếu acc hiện tại là baohan_200 thì dừng luôn
+if LocalPlayer.Name == "baohan_200" then
+    warn("🚫 Script không hoạt động với tài khoản baohan_200")
+    return
+end
+
+-- Đường dẫn đến cái Part bạn muốn kiểm tra
+local targetPathName = "Cylinder.003"
+
+-- ✅ CHỜ ĐẾN KHI NHÂN VẬT LOAD ĐỦ ĐỂ LẤY TỌA ĐỘ
+repeat
+    task.wait(0.5)
+until LocalPlayer.Character 
+    and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") 
+    and LocalPlayer.Character:FindFirstChild("Humanoid")
+
+print("✅ Đã xác nhận có tọa độ nhân vật, bắt đầu chạy script...")
+local root = LocalPlayer.Character.HumanoidRootPart
+print("📍 Tọa độ hiện tại:", root.Position)
+
+-- Hàm kiểm tra cổng Draco
+local function checkDracoGate()
+    local map = Workspace:FindFirstChild("Map")
+    if not map then 
+        warn("⚠️ Chưa load được Map") 
+        return 
+    end
+    
+    local waterfall = map:FindFirstChild("Waterfall")
+    if not waterfall then 
+        warn("⚠️ Chưa tìm thấy khu vực Waterfall") 
+        return 
+    end
+    
+    local islandModel = waterfall:FindFirstChild("IslandModel")
+    if not islandModel then 
+        warn("⚠️ Chưa tìm thấy IslandModel") 
+        return 
+    end
+    
+    local dojoDoor = islandModel:FindFirstChild("DojoTempleDoor")
+    
+    -- TRƯỜNG HỢP 1: Cả khung cửa biến mất
+    if not dojoDoor then
+        print("✅ TRẠNG THÁI: CỔNG ĐÃ MỞ! (Toàn bộ khung cửa đã mất)")
+        return "gate_gone"
+    end
+
+    local blockerPart = dojoDoor:FindFirstChild(targetPathName)
+
+    if blockerPart then
+        if blockerPart.Transparency == 1 or blockerPart.CanCollide == false then
+            print("✅ TRẠNG THÁI: CỔNG ĐÃ MỞ! (Part còn đó nhưng đã tàng hình)")
+            return "part_hidden"
+        else
+            warn("❌ TRẠNG THÁI: CỔNG CHƯA MỞ (Vẫn tìm thấy khối chặn)")
+            return "closed"
+        end
+    else
+        print("✅ TRẠNG THÁI: CỔNG ĐÃ MỞ! (Khối chặn đã biến mất)")
+        return "part_gone"
+    end
+end
+
+-- 🔁 Lặp kiểm tra mỗi 1 giây (chỉ bắt đầu sau khi có tọa độ)
+while task.wait(1) do
+    local status = checkDracoGate()
+
+    -- Chỉ gửi file khi Part còn đó nhưng đã tàng hình
+    if status == "part_hidden" then
+        local username = LocalPlayer.Name
+        local fileName = username .. ".txt"
+        local content = "Completed-hydra"
+        
+        if writefile then
+            writefile(fileName, content)
+            print("✅ File " .. fileName .. " đã tạo với nội dung: " .. content)
+        else
+            warn("❌ Không thể ghi file. Chỉ chạy được trên executor hỗ trợ writefile.")
+        end
+    end
+end
