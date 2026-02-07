@@ -74,5 +74,6 @@ else
 end
 
 repeat wait() until game:IsLoaded() and game.Players.LocalPlayer
-getgenv().Key = "e9162fb60364a89d94d75009"
+getgenv().Key = "14dc52e5bb5222bbaa36f9f4"
+
 loadstring(game:HttpGet("https://raw.githubusercontent.com/obiiyeuem/vthangsitink/refs/heads/main/BananaCat-KaitunLevi.lua"))()
