@@ -13,7 +13,7 @@ local CommF = ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("CommF_")
 local LocalPlayer = Players.LocalPlayer
 
 -- // KIỂM TRA USERNAME //
-if LocalPlayer.Name == "baohan_200" then
+if LocalPlayer.Name == "XxSparkC0dexX2003" then
     warn("🚫 Script không hoạt động với tài khoản baohan_200")
     return
 end
