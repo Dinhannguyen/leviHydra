@@ -3,7 +3,7 @@ local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 
 -- Nếu acc hiện tại là baohan_200 thì dừng luôn
-if LocalPlayer.Name == "baohan_200" then
+if LocalPlayer.Name == "XxSparkC0dexX2003" then
     warn("🚫 Script không hoạt động với tài khoản baohan_200")
     return
 end
